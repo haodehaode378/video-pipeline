@@ -9,13 +9,14 @@ import { runStep5 } from './step5-narration.js'
 import { runStep6 } from './step6-tts.js'
 import { runTimelineStep } from './step-timeline.js'
 import { runStep7 } from './step7-mux.js'
+import { runStepSubtitle } from './step-subtitle.js'
 
 let broadcast = null
 export function setBroadcaster(fn) { broadcast = fn }
 
 const DATA_PATH = 'data/episodes.json'
 
-const stepOrder = ['research', 'script', 'narration', 'tts', 'timeline', 'code', 'snapshot', 'render', 'mux']
+const stepOrder = ['research', 'script', 'narration', 'tts', 'timeline', 'subtitle', 'code', 'snapshot', 'render', 'mux']
 
 function updateEpisode(slug, updater) {
   const episodes = readJSON(DATA_PATH) || []
@@ -210,6 +211,22 @@ export async function startPipeline(episode, startFrom, options = {}) {
       })
       return
     }
+  }
+
+  if (shouldRun('subtitle', startIdx, stopIdx)) {
+    updateEpisode(slug, (ep) => { ep.steps.subtitle = 'running' })
+    const r = await runStepSubtitle(episode)
+    if (!r.success) {
+      updateEpisode(slug, (ep) => {
+        ep.steps.subtitle = 'failed'
+        ep.status = 'failed'
+        ep.error = r.error
+      })
+      return
+    }
+    updateEpisode(slug, (ep) => {
+      ep.steps.subtitle = 'completed'
+    })
   }
 
   if (shouldRun('mux', startIdx, stopIdx)) {

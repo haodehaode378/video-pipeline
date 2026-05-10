@@ -1,4 +1,4 @@
-export default function VideoPlayer({ src, subtitleSrc, subtitleLang = 'zh' }) {
+export default function VideoPlayer({ src }) {
   if (!src) {
     return (
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
@@ -20,17 +20,7 @@ export default function VideoPlayer({ src, subtitleSrc, subtitleLang = 'zh' }) {
         className="w-full aspect-video"
         controls
         src={src}
-        crossOrigin="anonymous"
       >
-        {subtitleSrc && (
-          <track
-            kind="subtitles"
-            src={subtitleSrc}
-            srcLang={subtitleLang}
-            label={subtitleLang === 'zh' ? '中文字幕' : subtitleLang}
-            default
-          />
-        )}
         您的浏览器不支持视频播放
       </video>
     </div>

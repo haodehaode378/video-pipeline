@@ -1,18 +1,10 @@
 import { useState } from 'react'
 
-const htmlTabs = [
+const tabs = [
   { key: 'html', label: 'HTML' },
   { key: 'css', label: 'CSS' },
   { key: 'js', label: 'JavaScript' },
 ]
-
-function getRemotionTabs(code) {
-  return (code.remotionComponents || []).map((component, index) => ({
-    key: component.id || `scene-${index + 1}`,
-    label: component.id || `Scene ${index + 1}`,
-    value: component.component || '',
-  }))
-}
 
 export default function CodePreview({ code, slug, onSaved }) {
   const [active, setActive] = useState('html')
@@ -29,25 +21,13 @@ export default function CodePreview({ code, slug, onSaved }) {
     )
   }
 
-  const isRemotion = code.type === 'remotion' || Array.isArray(code.remotionComponents)
-  const tabs = isRemotion ? getRemotionTabs(code) : htmlTabs
-  const activeKey = tabs.some((t) => t.key === active) ? active : tabs[0]?.key
-  const currentTab = tabs.find((t) => t.key === activeKey)
-  const current = editing[activeKey] ?? (isRemotion ? currentTab?.value : code[activeKey]) ?? ''
+  const current = editing[active] ?? code[active] ?? ''
 
   const handleSave = async () => {
     setSaving(true)
     setMsg('')
     try {
-      const updated = isRemotion
-        ? {
-            ...code,
-            remotionComponents: (code.remotionComponents || []).map((component, index) => {
-              const key = component.id || `scene-${index + 1}`
-              return editing[key] === undefined ? component : { ...component, component: editing[key] }
-            }),
-          }
-        : { ...code, ...editing }
+      const updated = { ...code, ...editing }
       const res = await fetch(`/api/episodes/${slug}/code`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -72,7 +52,7 @@ export default function CodePreview({ code, slug, onSaved }) {
               key={t.key}
               onClick={() => setActive(t.key)}
               className={`px-3 py-1 rounded text-xs transition-colors ${
-                activeKey === t.key
+                active === t.key
                   ? 'bg-tech-500/20 text-tech-400'
                   : 'text-gray-500 hover:text-gray-300'
               }`}
@@ -95,7 +75,7 @@ export default function CodePreview({ code, slug, onSaved }) {
       <textarea
         className="w-full h-64 bg-gray-950 border border-gray-700 rounded-lg p-3 font-mono text-xs text-gray-300 resize-y focus:outline-none focus:border-tech-500"
         value={current}
-        onChange={(e) => setEditing({ ...editing, [activeKey]: e.target.value })}
+        onChange={(e) => setEditing({ ...editing, [active]: e.target.value })}
         spellCheck={false}
       />
     </div>

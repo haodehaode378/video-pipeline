@@ -7,24 +7,19 @@ import ScriptEditor from '../components/ScriptEditor'
 import CodePreview from '../components/CodePreview'
 import StoryboardEditor from '../components/StoryboardEditor'
 import TimelinePreview from '../components/TimelinePreview'
-import AssetGallery from '../components/AssetGallery'
-import SubtitlePreview from '../components/SubtitlePreview'
-import SnapshotGallery from '../components/SnapshotGallery'
 import AIAssistantPanel from '../components/AIAssistantPanel'
 import { usePipelineStatus } from '../hooks/usePipelineStatus'
 
-const stepOrder = ['research', 'script', 'assets', 'narration', 'tts', 'timeline', 'code', 'snapshot', 'render', 'whisper', 'mux']
+const stepOrder = ['research', 'script', 'narration', 'tts', 'timeline', 'code', 'snapshot', 'render', 'mux']
 const stepNames = {
   research: '资料收集',
   script: '生成分镜',
-  assets: '素材获取',
   narration: '旁白分段提取',
   tts: 'TTS 语音合成',
   timeline: '音频时间轴校准',
-  code: 'React/Remotion 代码生成',
-  snapshot: 'Remotion 场景截图',
-  render: 'Remotion 视频渲染',
-  whisper: '字幕生成',
+  code: 'HTML/CSS/JS 代码生成',
+  snapshot: '场景截图',
+  render: '视频渲染',
   mux: '最终合成',
 }
 
@@ -192,10 +187,8 @@ export default function EpisodeDetail() {
   const logs = buildLogs(displayEpisode)
   const voiceoverVideo = `/videos/${slug}/output/episode-${slug}-voiceover.mp4`
   const silentVideo = `/videos/${slug}/output/episode-${slug}.mp4`
-  const subtitleSrt = `/videos/${slug}/episode-${slug}.srt`
   const videoReady = displayEpisode.steps?.mux === 'completed'
   const videoSrc = videoReady ? voiceoverVideo : (displayEpisode.steps?.render === 'completed' ? silentVideo : null)
-  const hasSubtitles = displayEpisode.steps?.whisper === 'completed'
   const codeFallback = displayEpisode.codeFallback?.used ? displayEpisode.codeFallback : null
 
   const currentStepKey = stepOrder[currentStep - 1]
@@ -309,7 +302,7 @@ export default function EpisodeDetail() {
                 </button>
               </div>
               <p className="text-yellow-100 text-sm mb-2">
-                AI 生成 React/Remotion 代码失败后，系统使用了本地兜底模板继续生成视频。视频可以继续渲染，但画面可能更通用。
+                AI 生成 HTML/CSS/JS 失败后，系统使用了本地兜底模板继续生成视频。视频可以继续渲染，但画面可能更通用。
               </p>
               <p className="text-yellow-200/80 text-xs font-mono break-words">
                 {codeFallback.reason}
@@ -346,10 +339,7 @@ export default function EpisodeDetail() {
         </div>
 
         <aside className="space-y-4">
-          <VideoPlayer
-            src={videoSrc}
-            subtitleSrc={hasSubtitles ? subtitleSrt : null}
-          />
+          <VideoPlayer src={videoSrc} />
           <AIAssistantPanel
             storageKey={`ai-assistant:episode:${slug}`}
             title="剧集创作助手"
@@ -396,28 +386,9 @@ export default function EpisodeDetail() {
         </div>
       )}
 
-      {displayEpisode.steps?.assets === 'completed' && displayEpisode.assetsContent && (
-        <div className="mt-6">
-          <AssetGallery
-            assets={displayEpisode.assetsContent}
-            scenes={displayEpisode.storyboardContent?.scenes || []}
-          />
-        </div>
-      )}
-
       {displayEpisode.timelineContent && (
         <div className="mt-6">
           <TimelinePreview timeline={displayEpisode.timelineContent} />
-        </div>
-      )}
-
-      {displayEpisode.steps?.snapshot === 'completed' && (
-        <div className="mt-6">
-          <SnapshotGallery
-            slug={slug}
-            scenes={displayEpisode.storyboardContent?.scenes || []}
-            components={displayEpisode.codeContent?.remotionComponents || []}
-          />
         </div>
       )}
 
@@ -428,12 +399,6 @@ export default function EpisodeDetail() {
             slug={slug}
             onSaved={(content) => setEpisode((prev) => ({ ...prev, scriptContent: content }))}
           />
-        </div>
-      )}
-
-      {displayEpisode.steps?.whisper === 'completed' && displayEpisode.subtitlesContent && (
-        <div className="mt-6">
-          <SubtitlePreview subtitles={displayEpisode.subtitlesContent} />
         </div>
       )}
 
